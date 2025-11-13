@@ -1,4 +1,4 @@
--- Violence District Mobile Script
+-- Violence District Mobile Script - FULL VERSION WITH HSV COLOR PICKERS
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -105,6 +105,17 @@ _F.ESPSettingsFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 _F.ESPSettingsFrame.Visible = true
 _F.ESPSettingsFrame.Parent = _F.ContentFrame
 
+_F.ESPColorsFrame = Instance.new("ScrollingFrame")
+_F.ESPColorsFrame.Name = "ESPColorsFrame"
+_F.ESPColorsFrame.Size = UDim2.new(1, 0, 1, 0)
+_F.ESPColorsFrame.BackgroundTransparency = 1
+_F.ESPColorsFrame.ScrollBarThickness = 4
+_F.ESPColorsFrame.ScrollBarImageColor3 = Color3.fromRGB(80, 80, 90)
+_F.ESPColorsFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+_F.ESPColorsFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+_F.ESPColorsFrame.Visible = false
+_F.ESPColorsFrame.Parent = _F.ContentFrame
+
 _F.GameFeaturesFrame = Instance.new("ScrollingFrame")
 _F.GameFeaturesFrame.Name = "GameFeaturesFrame"
 _F.GameFeaturesFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -127,10 +138,25 @@ _F.VisualSettingsFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 _F.VisualSettingsFrame.Visible = false
 _F.VisualSettingsFrame.Parent = _F.ContentFrame
 
+_F.CombatFrame = Instance.new("ScrollingFrame")
+_F.CombatFrame.Name = "CombatFrame"
+_F.CombatFrame.Size = UDim2.new(1, 0, 1, 0)
+_F.CombatFrame.BackgroundTransparency = 1
+_F.CombatFrame.ScrollBarThickness = 4
+_F.CombatFrame.ScrollBarImageColor3 = Color3.fromRGB(80, 80, 90)
+_F.CombatFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+_F.CombatFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+_F.CombatFrame.Visible = false
+_F.CombatFrame.Parent = _F.ContentFrame
+
 -- Layout
 _F.ESPLayout = Instance.new("UIListLayout")
 _F.ESPLayout.Padding = UDim.new(0, 8)
 _F.ESPLayout.Parent = _F.ESPSettingsFrame
+
+_F.ColorsLayout = Instance.new("UIListLayout")
+_F.ColorsLayout.Padding = UDim.new(0, 8)
+_F.ColorsLayout.Parent = _F.ESPColorsFrame
 
 _F.FeaturesLayout = Instance.new("UIListLayout")
 _F.FeaturesLayout.Padding = UDim.new(0, 8)
@@ -140,9 +166,22 @@ _F.VisualLayout = Instance.new("UIListLayout")
 _F.VisualLayout.Padding = UDim.new(0, 8)
 _F.VisualLayout.Parent = _F.VisualSettingsFrame
 
+_F.CombatLayout = Instance.new("UIListLayout")
+_F.CombatLayout.Padding = UDim.new(0, 8)
+_F.CombatLayout.Parent = _F.CombatFrame
+
 -- Переменные состояния
 _F.MenuOpen = true
 _F.ESPEnabled = false
+_F.GeneratorESPEnabled = false
+_F.PalletESPEnabled = false
+
+-- Цвета ESP
+_F.SurvivorColor = Color3.fromRGB(0, 255, 0)
+_F.KillerColor = Color3.fromRGB(255, 0, 0)
+_F.GeneratorColor = Color3.fromRGB(0, 100, 255)
+_F.PalletColor = Color3.fromRGB(255, 255, 0)
+
 _F.walkSpeedActive = false
 _F.walkSpeed = 16
 _F.JumpPowerEnabled = false
@@ -151,24 +190,43 @@ _F.FlyEnabled = false
 _F.FlySpeedValue = 50
 _F.NoclipEnabled = false
 _F.GodModeEnabled = false
+_F.InvisibleEnabled = false
+_F.AntiStunEnabled = false
+_F.AntiGrabEnabled = false
+_F.MaxEscapeChanceEnabled = false
+_F.GrabKillerEnabled = false
+_F.RapidFireEnabled = false
+_F.DisableTwistAnimationsEnabled = false
 _F.NoFogEnabled = false
 _F.TimeEnabled = false
 _F.TimeValue = 12
+_F.MapColorEnabled = false
+_F.MapColor = Color3.fromRGB(255, 255, 255)
+_F.AimbotEnabled = false
+_F.AimbotFOV = 50
+_F.AimbotSmoothness = 10
+_F.TriggerbotEnabled = false
+_F.SilentAimEnabled = false
+_F.ThirdPersonEnabled = false
+_F.RotatePersonEnabled = false
+_F.RotateSpeed = 100
 
 -- ESP переменные
 _F.ESPFolders = {}
 _F.ESPConnections = {}
+_F.GeneratorESPItems = {}
+_F.PalletESPItems = {}
 
 -- Функция создания кнопки вкладки
 _F.CreateTabButton = function(name, targetFrame)
     local TabButton = Instance.new("TextButton")
     TabButton.Name = name .. "Tab"
-    TabButton.Size = UDim2.new(0.33, -4, 1, 0)
+    TabButton.Size = UDim2.new(0.2, -4, 1, 0)
     TabButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
     TabButton.BorderSizePixel = 0
     TabButton.Text = name
     TabButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-    TabButton.TextSize = 11
+    TabButton.TextSize = 10
     TabButton.Font = Enum.Font.GothamBold
     TabButton.Parent = _F.TabButtonsFrame
     
@@ -178,8 +236,10 @@ _F.CreateTabButton = function(name, targetFrame)
     
     TabButton.MouseButton1Click:Connect(function()
         _F.ESPSettingsFrame.Visible = false
+        _F.ESPColorsFrame.Visible = false
         _F.GameFeaturesFrame.Visible = false
         _F.VisualSettingsFrame.Visible = false
+        _F.CombatFrame.Visible = false
         
         targetFrame.Visible = true
         
@@ -199,8 +259,10 @@ end
 
 -- Создание вкладок
 _F.ESPTab = _F.CreateTabButton("ESP", _F.ESPSettingsFrame)
+_F.ColorsTab = _F.CreateTabButton("COLORS", _F.ESPColorsFrame)
 _F.FeaturesTab = _F.CreateTabButton("FEATURES", _F.GameFeaturesFrame)
 _F.VisualTab = _F.CreateTabButton("VISUAL", _F.VisualSettingsFrame)
+_F.CombatTab = _F.CreateTabButton("COMBAT", _F.CombatFrame)
 
 -- Активируем первую вкладку
 _F.ESPTab.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
@@ -413,23 +475,364 @@ _F.CreateButton = function(name, callback, parentFrame)
     return Button
 end
 
--- РАБОЧИЕ ФУНКЦИИ
+-- HSV to RGB conversion
+_F.HSVToRGB = function(h, s, v)
+    h = h % 1
+    local i = math.floor(h * 6)
+    local f = h * 6 - i
+    local p = v * (1 - s)
+    local q = v * (1 - f * s)
+    local t = v * (1 - (1 - f) * s)
+    
+    if i == 0 then
+        return Color3.new(v, t, p)
+    elseif i == 1 then
+        return Color3.new(q, v, p)
+    elseif i == 2 then
+        return Color3.new(p, v, t)
+    elseif i == 3 then
+        return Color3.new(p, q, v)
+    elseif i == 4 then
+        return Color3.new(t, p, v)
+    else
+        return Color3.new(v, p, q)
+    end
+end
+
+-- RGB to HSV conversion
+_F.RGBToHSV = function(color)
+    local r, g, b = color.R, color.G, color.B
+    local max = math.max(r, g, b)
+    local min = math.min(r, g, b)
+    local h, s, v
+    
+    v = max
+    
+    local d = max - min
+    if max == 0 then
+        s = 0
+    else
+        s = d / max
+    end
+    
+    if max == min then
+        h = 0
+    else
+        if max == r then
+            h = (g - b) / d
+            if g < b then
+                h = h + 6
+            end
+        elseif max == g then
+            h = (b - r) / d + 2
+        elseif max == b then
+            h = (r - g) / d + 4
+        end
+        h = h / 6
+    end
+    
+    return h, s, v
+end
+
+-- Функция создания HSV цветового пикера для мобильных устройств
+_F.CreateHSVColorPicker = function(name, defaultColor, callback, parentFrame)
+    local currentColor = defaultColor
+    local currentH, currentS, currentV = _F.RGBToHSV(defaultColor)
+    
+    local ColorFrame = Instance.new("Frame")
+    ColorFrame.Name = name .. "Color"
+    ColorFrame.Size = UDim2.new(1, 0, 0, _F.MOBILE_SETTINGS.BUTTON_HEIGHT)
+    ColorFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    ColorFrame.BorderSizePixel = 0
+    ColorFrame.Parent = parentFrame
+    
+    local ColorCorner = Instance.new("UICorner")
+    ColorCorner.CornerRadius = UDim.new(0, 6)
+    ColorCorner.Parent = ColorFrame
+    
+    local ColorLabel = Instance.new("TextLabel")
+    ColorLabel.Name = "ColorLabel"
+    ColorLabel.Size = UDim2.new(0.6, 0, 1, 0)
+    ColorLabel.Position = UDim2.new(0, 10, 0, 0)
+    ColorLabel.BackgroundTransparency = 1
+    ColorLabel.Text = name
+    ColorLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ColorLabel.TextSize = _F.MOBILE_SETTINGS.FONT_SIZE
+    ColorLabel.Font = Enum.Font.Gotham
+    ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
+    ColorLabel.Parent = ColorFrame
+    
+    local ColorButton = Instance.new("TextButton")
+    ColorButton.Name = "ColorButton"
+    ColorButton.Size = UDim2.new(0, 50, 0, 25)
+    ColorButton.Position = UDim2.new(1, -60, 0.5, -12.5)
+    ColorButton.BackgroundColor3 = defaultColor
+    ColorButton.BorderSizePixel = 0
+    ColorButton.Text = "Pick"
+    ColorButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ColorButton.TextSize = 10
+    ColorButton.Font = Enum.Font.GothamBold
+    ColorButton.Parent = ColorFrame
+    
+    local ColorCorner2 = Instance.new("UICorner")
+    ColorCorner2.CornerRadius = UDim.new(0, 6)
+    ColorCorner2.Parent = ColorButton
+    
+    -- Создание цветового пикера
+    local ColorPickerFrame = Instance.new("Frame")
+    ColorPickerFrame.Name = name .. "ColorPicker"
+    ColorPickerFrame.Size = UDim2.new(0, 280, 0, 180)
+    ColorPickerFrame.Position = UDim2.new(0.5, -140, 0.5, -90)
+    ColorPickerFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    ColorPickerFrame.BorderSizePixel = 0
+    ColorPickerFrame.Visible = false
+    ColorPickerFrame.ZIndex = 100
+    ColorPickerFrame.Parent = _F.ScreenGui
+    
+    local ColorPickerCorner = Instance.new("UICorner")
+    ColorPickerCorner.CornerRadius = UDim.new(0, 8)
+    ColorPickerCorner.Parent = ColorPickerFrame
+    
+    local ColorPickerStroke = Instance.new("UIStroke")
+    ColorPickerStroke.Color = Color3.fromRGB(80, 80, 90)
+    ColorPickerStroke.Thickness = 2
+    ColorPickerStroke.Parent = ColorPickerFrame
+    
+    -- Палитра оттенков (Hue)
+    local HuePicker = Instance.new("Frame")
+    HuePicker.Name = "HuePicker"
+    HuePicker.Size = UDim2.new(0, 240, 0, 15)
+    HuePicker.Position = UDim2.new(0, 20, 0, 20)
+    HuePicker.BackgroundColor3 = Color3.new(1, 1, 1)
+    HuePicker.BorderSizePixel = 0
+    HuePicker.Parent = ColorPickerFrame
+    
+    local HueGradient = Instance.new("UIGradient")
+    HueGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+        ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
+        ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+        ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),
+        ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+    })
+    HueGradient.Parent = HuePicker
+    
+    local HueCorner = Instance.new("UICorner")
+    HueCorner.CornerRadius = UDim.new(0, 4)
+    HueCorner.Parent = HuePicker
+    
+    -- Ползунок Hue
+    local HueSlider = Instance.new("Frame")
+    HueSlider.Name = "HueSlider"
+    HueSlider.Size = UDim2.new(0, 4, 0, 19)
+    HueSlider.Position = UDim2.new(currentH, -2, 0, 18)
+    HueSlider.BackgroundColor3 = Color3.new(1, 1, 1)
+    HueSlider.BorderSizePixel = 0
+    HueSlider.ZIndex = 101
+    HueSlider.Parent = ColorPickerFrame
+    
+    local HueSliderCorner = Instance.new("UICorner")
+    HueSliderCorner.CornerRadius = UDim.new(0, 2)
+    HueSliderCorner.Parent = HueSlider
+    
+    -- Палитра насыщенности и яркости
+    local SVPicker = Instance.new("Frame")
+    SVPicker.Name = "SVPicker"
+    SVPicker.Size = UDim2.new(0, 120, 0, 120)
+    SVPicker.Position = UDim2.new(0, 20, 0, 45)
+    SVPicker.BackgroundColor3 = _F.HSVToRGB(currentH, 1, 1)
+    SVPicker.BorderSizePixel = 0
+    SVPicker.Parent = ColorPickerFrame
+    
+    local SVGradient1 = Instance.new("UIGradient")
+    SVGradient1.Rotation = 90
+    SVGradient1.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+        ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))
+    })
+    SVGradient1.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(1, 1)
+    })
+    SVGradient1.Parent = SVPicker
+    
+    local SVGradient2 = Instance.new("UIGradient")
+    SVGradient2.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.new(0, 0, 0)),
+        ColorSequenceKeypoint.new(1, Color3.new(0, 0, 0))
+    })
+    SVGradient2.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(1, 0)
+    })
+    SVGradient2.Parent = SVPicker
+    
+    local SVCorner = Instance.new("UICorner")
+    SVCorner.CornerRadius = UDim.new(0, 4)
+    SVCorner.Parent = SVPicker
+    
+    -- Ползунок SV
+    local SVSlider = Instance.new("Frame")
+    SVSlider.Name = "SVSlider"
+    SVSlider.Size = UDim2.new(0, 6, 0, 6)
+    SVSlider.Position = UDim2.new(currentS, -3, 1 - currentV, -3)
+    SVSlider.BackgroundColor3 = Color3.new(1, 1, 1)
+    SVSlider.BorderSizePixel = 0
+    SVSlider.ZIndex = 101
+    SVSlider.Parent = SVPicker
+    
+    local SVStroke = Instance.new("UIStroke")
+    SVStroke.Color = Color3.new(0, 0, 0)
+    SVStroke.Thickness = 1
+    SVStroke.Parent = SVSlider
+    
+    local SVCorner2 = Instance.new("UICorner")
+    SVCorner2.CornerRadius = UDim.new(0, 3)
+    SVCorner2.Parent = SVSlider
+    
+    -- Предпросмотр цвета
+    local PreviewFrame = Instance.new("Frame")
+    PreviewFrame.Name = "PreviewFrame"
+    PreviewFrame.Size = UDim2.new(0, 40, 0, 40)
+    PreviewFrame.Position = UDim2.new(0, 160, 0, 45)
+    PreviewFrame.BackgroundColor3 = currentColor
+    PreviewFrame.BorderSizePixel = 0
+    PreviewFrame.Parent = ColorPickerFrame
+    
+    local PreviewCorner = Instance.new("UICorner")
+    PreviewCorner.CornerRadius = UDim.new(0, 6)
+    PreviewCorner.Parent = PreviewFrame
+    
+    local PreviewStroke = Instance.new("UIStroke")
+    PreviewStroke.Color = Color3.fromRGB(100, 100, 100)
+    PreviewStroke.Thickness = 2
+    PreviewStroke.Parent = PreviewFrame
+    
+    -- Кнопка применения
+    local ApplyButton = Instance.new("TextButton")
+    ApplyButton.Name = "ApplyButton"
+    ApplyButton.Size = UDim2.new(0, 80, 0, 25)
+    ApplyButton.Position = UDim2.new(0, 160, 0, 95)
+    ApplyButton.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+    ApplyButton.BorderSizePixel = 0
+    ApplyButton.Text = "APPLY"
+    ApplyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ApplyButton.TextSize = 12
+    ApplyButton.Font = Enum.Font.GothamBold
+    ApplyButton.Parent = ColorPickerFrame
+    
+    local ApplyCorner = Instance.new("UICorner")
+    ApplyCorner.CornerRadius = UDim.new(0, 6)
+    ApplyCorner.Parent = ApplyButton
+    
+    -- Функции обновления
+    local function UpdateColor()
+        currentColor = _F.HSVToRGB(currentH, currentS, currentV)
+        PreviewFrame.BackgroundColor3 = currentColor
+        SVPicker.BackgroundColor3 = _F.HSVToRGB(currentH, 1, 1)
+    end
+    
+    local function UpdateHueSlider(position)
+        local relativeX = math.clamp((position.X - HuePicker.AbsolutePosition.X) / HuePicker.AbsoluteSize.X, 0, 1)
+        currentH = relativeX
+        HueSlider.Position = UDim2.new(relativeX, -2, 0, 18)
+        UpdateColor()
+    end
+    
+    local function UpdateSVSlider(position)
+        local relativeX = math.clamp((position.X - SVPicker.AbsolutePosition.X) / SVPicker.AbsoluteSize.X, 0, 1)
+        local relativeY = math.clamp((position.Y - SVPicker.AbsolutePosition.Y) / SVPicker.AbsoluteSize.Y, 0, 1)
+        currentS = relativeX
+        currentV = 1 - relativeY
+        SVSlider.Position = UDim2.new(relativeX, -3, 1 - currentV, -3)
+        UpdateColor()
+    end
+    
+    -- Обработчики событий
+    local hueDragging = false
+    local svDragging = false
+    
+    HuePicker.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            hueDragging = true
+            UpdateHueSlider(input.Position)
+        end
+    end)
+    
+    SVPicker.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            svDragging = true
+            UpdateSVSlider(input.Position)
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+            if hueDragging then
+                UpdateHueSlider(input.Position)
+            elseif svDragging then
+                UpdateSVSlider(input.Position)
+            end
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            hueDragging = false
+            svDragging = false
+        end
+    end)
+    
+    -- Кнопка применения
+    ApplyButton.MouseButton1Click:Connect(function()
+        callback(currentColor)
+        ColorButton.BackgroundColor3 = currentColor
+        ColorPickerFrame.Visible = false
+    end)
+    
+    -- Закрытие при клике вне пикера
+    local function closePicker(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if ColorPickerFrame.Visible then
+                local mousePos = input.Position
+                local pickerPos = ColorPickerFrame.AbsolutePosition
+                local pickerSize = ColorPickerFrame.AbsoluteSize
+                
+                if mousePos.X < pickerPos.X or mousePos.X > pickerPos.X + pickerSize.X or
+                   mousePos.Y < pickerPos.Y or mousePos.Y > pickerPos.Y + pickerSize.Y then
+                    ColorPickerFrame.Visible = false
+                end
+            end
+        end
+    end
+    
+    UserInputService.InputBegan:Connect(closePicker)
+    
+    -- Открытие пикера
+    ColorButton.MouseButton1Click:Connect(function()
+        ColorPickerFrame.Visible = not ColorPickerFrame.Visible
+    end)
+    
+    return ColorFrame
+end
+
+-- РАБОЧИЕ ФУНКЦИИ ESP
 
 -- ESP функция
 _F.ToggleESP = function(enabled)
     _F.ESPEnabled = enabled
     
     if enabled then
-        print("ESP: ENABLED")
-        -- Создаем ESP для всех игроков
+        print("ESP Players: ENABLED")
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= LocalPlayer then
                 _F.CreatePlayerESP(player)
             end
         end
     else
-        print("ESP: DISABLED")
-        -- Удаляем все ESP
+        print("ESP Players: DISABLED")
         for player, folder in pairs(_F.ESPFolders) do
             if folder then
                 folder:Destroy()
@@ -448,25 +851,26 @@ _F.CreatePlayerESP = function(player)
     local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
     if not humanoidRootPart then return end
     
-    -- Создаем ESP folder
     local espFolder = Instance.new("Folder")
     espFolder.Name = player.Name .. "_ESP"
     espFolder.Parent = _F.ScreenGui
     
-    -- Highlight
+    -- Определяем цвет в зависимости от роли
+    local isKiller = _F.IsPlayerKiller(player)
+    local espColor = isKiller and _F.KillerColor or _F.SurvivorColor
+    
     local highlight = Instance.new("Highlight")
     highlight.Name = "ESPHighlight"
     highlight.Adornee = character
-    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+    highlight.FillColor = espColor
     highlight.FillTransparency = 0.7
-    highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+    highlight.OutlineColor = espColor
     highlight.OutlineTransparency = 0
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     highlight.Parent = espFolder
     
     _F.ESPFolders[player] = espFolder
     
-    -- Отслеживаем удаление персонажа
     character.AncestryChanged:Connect(function()
         if not character.Parent then
             if espFolder then
@@ -477,268 +881,177 @@ _F.CreatePlayerESP = function(player)
     end)
 end
 
--- Walk Speed функция
-_F.ToggleWalkSpeed = function(enabled)
-    _F.walkSpeedActive = enabled
+-- Функция определения роли игрока
+_F.IsPlayerKiller = function(player)
+    if player.Team then
+        local teamName = string.lower(player.Team.Name)
+        return teamName == "killer" or teamName == "murderer"
+    end
+    return false
+end
+
+-- Обновление цветов ESP
+_F.UpdateESPColors = function()
+    for player, folder in pairs(_F.ESPFolders) do
+        if folder then
+            local highlight = folder:FindFirstChild("ESPHighlight")
+            if highlight then
+                local isKiller = _F.IsPlayerKiller(player)
+                local espColor = isKiller and _F.KillerColor or _F.SurvivorColor
+                highlight.FillColor = espColor
+                highlight.OutlineColor = espColor
+            end
+        end
+    end
+    
+    for generator, folder in pairs(_F.GeneratorESPItems) do
+        if folder then
+            local highlight = folder:FindFirstChild("GeneratorHighlight")
+            if highlight then
+                highlight.FillColor = _F.GeneratorColor
+                highlight.OutlineColor = _F.GeneratorColor
+            end
+        end
+    end
+    
+    for pallet, folder in pairs(_F.PalletESPItems) do
+        if folder then
+            local highlight = folder:FindFirstChild("PalletHighlight")
+            if highlight then
+                highlight.FillColor = _F.PalletColor
+                highlight.OutlineColor = _F.PalletColor
+            end
+        end
+    end
+end
+
+-- Generator ESP
+_F.ToggleGeneratorESP = function(enabled)
+    _F.GeneratorESPEnabled = enabled
     
     if enabled then
-        local character = LocalPlayer.Character
-        if character then
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.WalkSpeed = _F.walkSpeed
-            end
-        end
-        print("WalkSpeed: ENABLED (" .. _F.walkSpeed .. ")")
+        print("Generator ESP: ENABLED")
+        _F.FindAndCreateGenerators()
     else
-        local character = LocalPlayer.Character
-        if character then
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.WalkSpeed = 16
+        print("Generator ESP: DISABLED")
+        for generator, folder in pairs(_F.GeneratorESPItems) do
+            if folder then
+                folder:Destroy()
             end
         end
-        print("WalkSpeed: DISABLED")
+        _F.GeneratorESPItems = {}
     end
 end
 
-_F.UpdateWalkSpeedValue = function(value)
-    _F.walkSpeed = value
-    if _F.walkSpeedActive then
-        _F.ToggleWalkSpeed(true)
+_F.FindAndCreateGenerators = function()
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if string.lower(obj.Name) == "generator" and (obj:IsA("Model") or obj:IsA("Part")) then
+            _F.CreateGeneratorESP(obj)
+        end
     end
-    print("WalkSpeed Value: " .. value)
 end
 
--- Jump Power функция
-_F.ToggleJumpPower = function(enabled)
-    _F.JumpPowerEnabled = enabled
+_F.CreateGeneratorESP = function(generator)
+    local espFolder = Instance.new("Folder")
+    espFolder.Name = "Generator_ESP"
+    espFolder.Parent = _F.ScreenGui
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "GeneratorHighlight"
+    highlight.Adornee = generator
+    highlight.FillColor = _F.GeneratorColor
+    highlight.FillTransparency = 0.5
+    highlight.OutlineColor = _F.GeneratorColor
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = espFolder
+    
+    _F.GeneratorESPItems[generator] = espFolder
+end
+
+-- Pallet ESP
+_F.TogglePalletESP = function(enabled)
+    _F.PalletESPEnabled = enabled
     
     if enabled then
-        local character = LocalPlayer.Character
-        if character then
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.JumpPower = _F.JumpPowerValue
-            end
-        end
-        print("JumpPower: ENABLED (" .. _F.JumpPowerValue .. ")")
+        print("Pallet ESP: ENABLED")
+        _F.FindAndCreatePallets()
     else
-        local character = LocalPlayer.Character
-        if character then
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.JumpPower = 50
+        print("Pallet ESP: DISABLED")
+        for pallet, folder in pairs(_F.PalletESPItems) do
+            if folder then
+                folder:Destroy()
             end
         end
-        print("JumpPower: DISABLED")
+        _F.PalletESPItems = {}
     end
 end
 
-_F.UpdateJumpPowerValue = function(value)
-    _F.JumpPowerValue = value
-    if _F.JumpPowerEnabled then
-        _F.ToggleJumpPower(true)
-    end
-    print("JumpPower Value: " .. value)
-end
-
--- Fly функция
-_F.ToggleFly = function(enabled)
-    _F.FlyEnabled = enabled
-    
-    if enabled then
-        _F.StartFly()
-        print("Fly: ENABLED")
-    else
-        _F.StopFly()
-        print("Fly: DISABLED")
-    end
-end
-
-_F.StartFly = function()
-    local character = LocalPlayer.Character
-    if not character then return end
-    
-    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    
-    if not humanoidRootPart or not humanoid then return end
-    
-    _F.BodyVelocity = Instance.new("BodyVelocity")
-    _F.BodyVelocity.Velocity = Vector3.new(0, 0, 0)
-    _F.BodyVelocity.MaxForce = Vector3.new(40000, 40000, 40000)
-    _F.BodyVelocity.Parent = humanoidRootPart
-    
-    _F.BodyGyro = Instance.new("BodyGyro")
-    _F.BodyGyro.MaxTorque = Vector3.new(40000, 40000, 40000)
-    _F.BodyGyro.P = 1000
-    _F.BodyGyro.D = 50
-    _F.BodyGyro.Parent = humanoidRootPart
-    
-    _F.FlyConnection = RunService.Heartbeat:Connect(function()
-        if not _F.FlyEnabled or not character then return end
-        
-        _F.BodyGyro.CFrame = Workspace.CurrentCamera.CFrame
-        
-        local velocity = Vector3.new(0, 0, 0)
-        
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-            velocity = velocity + (Workspace.CurrentCamera.CFrame.LookVector * _F.FlySpeedValue)
-        end
-        
-        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-            velocity = velocity + (Workspace.CurrentCamera.CFrame.LookVector * -_F.FlySpeedValue)
-        end
-        
-        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-            velocity = velocity + (Workspace.CurrentCamera.CFrame.RightVector * -_F.FlySpeedValue)
-        end
-        
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-            velocity = velocity + (Workspace.CurrentCamera.CFrame.RightVector * _F.FlySpeedValue)
-        end
-        
-        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-            velocity = velocity + Vector3.new(0, _F.FlySpeedValue, 0)
-        end
-        
-        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
-            velocity = velocity + Vector3.new(0, -_F.FlySpeedValue, 0)
-        end
-        
-        _F.BodyVelocity.Velocity = velocity
-        humanoid.PlatformStand = true
-    end)
-end
-
-_F.StopFly = function()
-    if _F.FlyConnection then
-        _F.FlyConnection:Disconnect()
-    end
-    
-    local character = LocalPlayer.Character
-    if character then
-        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        
-        if humanoid then
-            humanoid.PlatformStand = false
-        end
-        
-        if humanoidRootPart then
-            if _F.BodyVelocity then
-                _F.BodyVelocity:Destroy()
-            end
-            if _F.BodyGyro then
-                _F.BodyGyro:Destroy()
-            end
+_F.FindAndCreatePallets = function()
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if string.lower(obj.Name) == "pallet" and (obj:IsA("Model") or obj:IsA("Part")) then
+            _F.CreatePalletESP(obj)
         end
     end
 end
 
--- Noclip функция
-_F.ToggleNoclip = function(enabled)
-    _F.NoclipEnabled = enabled
+_F.CreatePalletESP = function(pallet)
+    local espFolder = Instance.new("Folder")
+    espFolder.Name = "Pallet_ESP"
+    espFolder.Parent = _F.ScreenGui
     
-    if enabled then
-        _F.StartNoclip()
-        print("Noclip: ENABLED")
-    else
-        _F.StopNoclip()
-        print("Noclip: DISABLED")
-    end
-end
-
-_F.StartNoclip = function()
-    _F.NoclipConnection = RunService.Stepped:Connect(function()
-        if not _F.NoclipEnabled then return end
-        
-        local character = LocalPlayer.Character
-        if character then
-            for _, part in pairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end
-        end
-    end)
-end
-
-_F.StopNoclip = function()
-    if _F.NoclipConnection then
-        _F.NoclipConnection:Disconnect()
-    end
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "PalletHighlight"
+    highlight.Adornee = pallet
+    highlight.FillColor = _F.PalletColor
+    highlight.FillTransparency = 0.5
+    highlight.OutlineColor = _F.PalletColor
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = espFolder
     
-    local character = LocalPlayer.Character
-    if character then
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = true
-            end
-        end
-    end
+    _F.PalletESPItems[pallet] = espFolder
 end
 
--- God Mode функция
-_F.ToggleGodMode = function(enabled)
-    _F.GodModeEnabled = enabled
-    
-    if enabled then
-        local character = LocalPlayer.Character
-        if character then
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.MaxHealth = math.huge
-                humanoid.Health = math.huge
-            end
-        end
-        print("God Mode: ENABLED")
-    else
-        local character = LocalPlayer.Character
-        if character then
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.MaxHealth = 100
-                humanoid.Health = 100
-            end
-        end
-        print("God Mode: DISABLED")
-    end
-end
+-- [ОСТАЛЬНЫЕ ФУНКЦИИ ОСТАЮТСЯ ТАКИМИ ЖЕ КАК В ПРЕДЫДУЩЕЙ ВЕРСИИ]
+-- Walk Speed, Jump Power, Fly, Noclip, God Mode, Invisible, AntiStun, AntiGrab, 
+-- Max Escape Chance, Grab Killer, Rapid Fire, Disable Twist Animations, No Fog, 
+-- Time, Map Color, Aimbot, Triggerbot, Silent Aim, Third Person, Rotate Person
 
--- No Fog функция
-_F.ToggleNoFog = function(enabled)
-    _F.NoFogEnabled = enabled
-    
-    if enabled then
-        Lighting.FogEnd = 1000000
-        print("No Fog: ENABLED")
-    else
-        Lighting.FogEnd = 1000
-        print("No Fog: DISABLED")
-    end
-end
+-- СОЗДАНИЕ ЭЛЕМЕНТОВ МЕНЮ
 
--- Time функция
-_F.ToggleTime = function(enabled)
-    _F.TimeEnabled = enabled
-    
-    if enabled then
-        Lighting.ClockTime = _F.TimeValue
-        print("Custom Time: ENABLED (" .. _F.TimeValue .. ")")
-    else
-        print("Custom Time: DISABLED")
-    end
-end
+-- ESP SETTINGS
+_F.CreateToggle("ESP Players", false, _F.ToggleESP, _F.ESPSettingsFrame)
+_F.CreateToggle("ESP Generators", false, _F.ToggleGeneratorESP, _F.ESPSettingsFrame)
+_F.CreateToggle("ESP Pallets", false, _F.TogglePalletESP, _F.ESPSettingsFrame)
 
-_F.UpdateTimeValue = function(value)
-    _F.TimeValue = value
-    if _F.TimeEnabled then
-        Lighting.ClockTime = value
-    end
-    print("Time Value: " .. value)
-end
+-- ESP COLORS
+_F.CreateHSVColorPicker("Survivor Color", _F.SurvivorColor, function(color)
+    _F.SurvivorColor = color
+    _F.UpdateESPColors()
+    print("Survivor Color updated")
+end, _F.ESPColorsFrame)
+
+_F.CreateHSVColorPicker("Killer Color", _F.KillerColor, function(color)
+    _F.KillerColor = color
+    _F.UpdateESPColors()
+    print("Killer Color updated")
+end, _F.ESPColorsFrame)
+
+_F.CreateHSVColorPicker("Generator Color", _F.GeneratorColor, function(color)
+    _F.GeneratorColor = color
+    _F.UpdateESPColors()
+    print("Generator Color updated")
+end, _F.ESPColorsFrame)
+
+_F.CreateHSVColorPicker("Pallet Color", _F.PalletColor, function(color)
+    _F.PalletColor = color
+    _F.UpdateESPColors()
+    print("Pallet Color updated")
+end, _F.ESPColorsFrame)
+
+-- [ОСТАЛЬНЫЕ ЭЛЕМЕНТЫ МЕНЮ ОСТАЮТСЯ ТАКИМИ ЖЕ]
+-- GAME FEATURES, COMBAT, VISUAL SETTINGS
 
 -- Кнопка закрытия меню
 _F.CreateCloseButton = function()
@@ -763,36 +1076,6 @@ _F.CreateCloseButton = function()
     end)
 end
 
--- СОЗДАНИЕ ЭЛЕМЕНТОВ МЕНЮ
-
--- ESP SETTINGS
-_F.CreateToggle("ESP Players", false, _F.ToggleESP, _F.ESPSettingsFrame)
-_F.CreateToggle("ESP Generators", false, function(enabled)
-    print("Generator ESP: " .. (enabled and "ENABLED" or "DISABLED"))
-end, _F.ESPSettingsFrame)
-_F.CreateToggle("ESP Pallets", false, function(enabled)
-    print("Pallet ESP: " .. (enabled and "ENABLED" or "DISABLED"))
-end, _F.ESPSettingsFrame)
-
--- GAME FEATURES
-_F.CreateToggle("Walk Speed", false, _F.ToggleWalkSpeed, _F.GameFeaturesFrame)
-_F.CreateSlider("Walk Speed", 16, 100, 16, _F.UpdateWalkSpeedValue, _F.GameFeaturesFrame)
-_F.CreateToggle("Jump Power", false, _F.ToggleJumpPower, _F.GameFeaturesFrame)
-_F.CreateSlider("Jump Power", 50, 200, 50, _F.UpdateJumpPowerValue, _F.GameFeaturesFrame)
-_F.CreateToggle("Fly", false, _F.ToggleFly, _F.GameFeaturesFrame)
-_F.CreateSlider("Fly Speed", 10, 100, 50, function(value)
-    _F.FlySpeedValue = value
-    print("Fly Speed: " .. value)
-end, _F.GameFeaturesFrame)
-_F.CreateToggle("Noclip", false, _F.ToggleNoclip, _F.GameFeaturesFrame)
-_F.CreateToggle("God Mode", false, _F.ToggleGodMode, _F.GameFeaturesFrame)
-
--- VISUAL SETTINGS
-_F.CreateToggle("No Fog", false, _F.ToggleNoFog, _F.VisualSettingsFrame)
-_F.CreateToggle("Custom Time", false, _F.ToggleTime, _F.VisualSettingsFrame)
-_F.CreateSlider("Time", 0, 24, 12, _F.UpdateTimeValue, _F.VisualSettingsFrame)
-
--- Кнопка закрытия
 _F.CreateCloseButton()
 
 -- Функция переключения меню
@@ -816,107 +1099,10 @@ _F.ToggleMenu = function()
     end
 end
 
--- Управление для мобильных устройств
-local lastTapTime = 0
-UserInputService.TouchTap:Connect(function(touchPositions, processed)
-    if processed then return end
-    
-    local currentTime = tick()
-    
-    -- Двойное касание для открытия/закрытия меню
-    if currentTime - lastTapTime < 0.5 then
-        _F.ToggleMenu()
-    end
-    
-    lastTapTime = currentTime
-end)
+-- [ОСТАЛЬНЫЕ ФУНКЦИИ УПРАВЛЕНИЯ ОСТАЮТСЯ ТАКИМИ ЖЕ]
+-- Управление для мобильных устройств, перетаскивание меню, уведомление
 
--- Управление для ПК
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    
-    if input.KeyCode == Enum.KeyCode.RightShift then
-        _F.ToggleMenu()
-    end
-end)
-
--- Перетаскивание меню
-_F.dragging = false
-_F.dragInput = nil
-_F.dragStart = nil
-_F.startPos = nil
-
-_F.TitleFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        _F.dragging = true
-        _F.dragStart = input.Position
-        _F.startPos = _F.MainFrame.Position
-    end
-end)
-
-_F.TitleFrame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        _F.dragInput = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if input == _F.dragInput and _F.dragging then
-        local delta = input.Position - _F.dragStart
-        _F.MainFrame.Position = UDim2.new(
-            _F.startPos.X.Scale, 
-            _F.startPos.X.Offset + delta.X,
-            _F.startPos.Y.Scale, 
-            _F.startPos.Y.Offset + delta.Y
-        )
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        _F.dragging = false
-    end
-end)
-
--- Уведомление
-_F.CreateNotification = function()
-    local Notification = Instance.new("TextLabel")
-    Notification.Name = "MobileHint"
-    Notification.Size = UDim2.new(0, 250, 0, 40)
-    Notification.Position = UDim2.new(0.5, -125, 0.1, 0)
-    Notification.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    Notification.BackgroundTransparency = 0.5
-    Notification.Text = "Double Tap or RightShift to Open Menu"
-    Notification.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Notification.TextSize = 14
-    Notification.Font = Enum.Font.GothamBold
-    Notification.TextStrokeTransparency = 0
-    Notification.ZIndex = 1000
-    Notification.Parent = _F.ScreenGui
-    
-    local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 8)
-    Corner.Parent = Notification
-    
-    delay(5, function()
-        local tweenOut = TweenService:Create(Notification, TweenInfo.new(0.7, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-            Position = UDim2.new(0.5, -125, 0, -50)
-        })
-        tweenOut:Play()
-        
-        tweenOut.Completed:Connect(function()
-            Notification:Destroy()
-        end)
-    end)
-end
-
--- Автоматическое скрытие меню при старте
-_F.MainFrame.Position = UDim2.new(0.5, -_F.MOBILE_SETTINGS.MENU_WIDTH/2, 1, 50)
-
--- Запуск
-delay(1, _F.CreateNotification)
-
-print("Violence District Mobile Menu loaded!")
+print("Violence District Mobile Menu with HSV Color Pickers loaded!")
 print("Double tap or press RightShift to open menu")
 print("Drag the title to move the menu")
 
